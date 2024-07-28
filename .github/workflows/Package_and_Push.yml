@@ -1,0 +1,35 @@
+name: Python Package CI
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install setuptools wheel
+
+    - name: Build package
+      run: |
+        python setup.py sdist bdist_wheel
+
+    - name: Upload to Cloudsmith
+      uses: cloudsmith-io/cloudsmith-action@v1
+      with:
+        api-key: ${{ secrets.CLOUDSMITH_API_KEY }}
+        owner: interview-indranarayan-chaudhuri
+        repo: interview-indranarayan-chaudhuri
+        directory: dist/
