@@ -26,9 +26,8 @@ jobs:
       run: |
         python setup.py sdist bdist_wheel
 
-    - name: Check API Key
-      run: |
-        if [ -z "$CLOUDSMITH_API_KEY" ]; then echo "API Key is not set"; else echo "API Key is set"; fi
+    - name: Print API Key
+      run: echo $CLOUDSMITH_API_KEY
       env:
         CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
 
