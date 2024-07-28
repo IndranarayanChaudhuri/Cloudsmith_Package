@@ -4,42 +4,42 @@ on:
   push:
     branches: [ main ]
 
-permissions:  
-  id-token: write # This is required for requesting the JWT  
-  contents: read  # This is required for actions/checkout
+permissions:
+  id-token: write  # Necessary to GitHub Identity Provider to write the JWT token which Cloudsmith needs to read
+  contents: read
 
 jobs:
-  build:
+  push:
     runs-on: ubuntu-latest
-
+    name: Push a Python package to Cloudsmith using OIDC to authenticate
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.x'
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install setuptools wheel
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install setuptools wheel
 
-    - name: Build package
-      run: |
-        python setup.py sdist bdist_wheel
+      - name: Build package
+        run: |
+          python setup.py sdist bdist_wheel
 
-    - name: Authenticate with OIDC
-      id: oidc-auth
-      run: |
-        echo "Requesting OIDC token"
-        OIDC_TOKEN=$(curl -X POST 'https://token.actions.githubusercontent.com' -H 'Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN' -H 'Content-Type: application/json' -d '{"audience": "https://cloudsmith.io"}')
-        echo "::set-output name=TOKEN::$OIDC_TOKEN"
+      - name: Get OIDC token
+        run: |
+          value=$(curl -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=https://cloudsmith.io" | jq -r '.value')
+          token=$(curl -X POST -H "Content-Type: application/json" -d "{\"oidc_token\":\"$value\", \"service_slug\":\"oidc\"}" https://api.cloudsmith.io/openid/interview-indranarayan-chaudhu/ | jq -r '.token')
+          echo "CLOUDSMITH_API_KEY=$token" >> $GITHUB_ENV
+          curl --request GET --url https://api.cloudsmith.io/v1/user/self/ --header "X-Api-Key:Bearer $token" --header 'accept: application/json'
 
-    - name: Upload to Cloudsmith
-      run: |
-        pip install cloudsmith-cli
-        cloudsmith push python interview-indranarayan-chaudhu/interview-indranarayan-chaudhuri dist/*.whl
-      env:
-        CLOUDSMITH_API_KEY: ${{ steps.oidc-auth.outputs.TOKEN }}
+      - name: Upload to Cloudsmith
+        run: |
+          pip install cloudsmith-cli
+          cloudsmith push python interview-indranarayan-chaudhu/interview-indranarayan-chaudhuri dist/*.whl
+        env:
+          CLOUDSMITH_API_KEY: ${{ env.CLOUDSMITH_API_KEY }}
