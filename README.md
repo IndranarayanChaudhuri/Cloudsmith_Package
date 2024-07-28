@@ -13,8 +13,9 @@ Cloudsmith_Package/
 └── setup.py
 
 
-==========================================
-
+- **.github/workflows/package-and-push.yml**: CI workflow for building and pushing the Python package to Cloudsmith.
+- **sample_package/**: Contains the sample Python package module.
+- **setup.py**: Script for packaging and distributing the Python package.
 
 ## Getting Started
 
