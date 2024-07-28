@@ -27,9 +27,8 @@ jobs:
         python setup.py sdist bdist_wheel
 
     - name: Upload to Cloudsmith
-      uses: cloudsmith-io/cloudsmith-action@v1
-      with:
-        api-key: ${{ secrets.CLOUDSMITH_API_KEY }}
-        owner: interview-indranarayan-chaudhuri
-        repo: interview-indranarayan-chaudhuri
-        directory: dist/
+      run: |
+        pip install cloudsmith-cli
+        cloudsmith push python interview-indranarayan-chaudhuri/interview-indranarayan-chaudhuri dist/*.whl
+      env:
+        CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
